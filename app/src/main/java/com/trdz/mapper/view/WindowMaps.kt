@@ -8,16 +8,15 @@ import android.location.Geocoder
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
-import androidx.fragment.app.Fragment
-
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
-
+import androidx.fragment.app.Fragment
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -25,26 +24,24 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.trdz.mapper.R
 import com.trdz.mapper.databinding.FragmentWindowMapsMainBinding
 import com.trdz.mapper.utility.REQUEST_CODE
-import org.koin.android.ext.android.inject
+import com.trdz.mapper.utility.hideKeyboard
 import java.util.*
 
 class WindowMaps: Fragment() {
 
-	//region Injected
-
-	private val navigation: Navigation by inject()
-
-	//endregion
-
 	//region Elements
+	private var _bottomSheetBehavior: BottomSheetBehavior<ConstraintLayout>? = null
+	private val bottomSheetBehavior get() = _bottomSheetBehavior!!
 	private var _binding: FragmentWindowMapsMainBinding? = null
 	private val binding get() = _binding!!
 	private lateinit var map: GoogleMap
-	private var lastLat: Double = 0.0
-	private var lastLon: Double = 0.0
+	private lateinit var current: Marker
+
+	private val markers: MutableList<Marker> = mutableListOf()
 
 	//endregion
 
@@ -77,16 +74,22 @@ class WindowMaps: Fragment() {
 		 * install it inside the SupportMapFragment. This method will only be triggered once the
 		 * user has installed Google Play services and returned to the app.
 		 */
-		val start = LatLng(lastLat, lastLon)
 		map = googleMap
 		map.run {
-			setOnMapLongClickListener { clear(); setMarker(it) }
-			addMarker(MarkerOptions().position(start).title(getString(R.string.t_title_your_position)))
-			moveCamera(CameraUpdateFactory.newLatLng(start))
+			setOnMapLongClickListener { setMarker(it) }
+			setOnMarkerClickListener { toDetails(it);true }
+			setOnMapClickListener {
+				bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN }
 		}
 	}
 
-	private fun setLoad(state : Boolean = false) {
+	private fun toDetails(marker: Marker) {
+		current = marker
+		binding.mapper.popupSheet.name.setText(current.title)
+		bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+	}
+
+	private fun setLoad(state: Boolean = false) {
 		if (state) binding.mapper.loadingLayout.visibility = View.VISIBLE
 		else binding.mapper.loadingLayout.visibility = View.GONE
 	}
@@ -117,7 +120,7 @@ class WindowMaps: Fragment() {
 		.setTitle(getString(R.string.t_permission_title))
 		.setMessage(getString(R.string.t_permission_explain))
 		.setPositiveButton(getString(R.string.t_permission_yes)) { _, _ -> permissionGranting() }
-		.setNegativeButton(getString(R.string.t_permission_no)) { dialog, _ -> setLoad(); dialog.dismiss()}
+		.setNegativeButton(getString(R.string.t_permission_no)) { dialog, _ -> setLoad(); dialog.dismiss() }
 		.create()
 		.show()
 
@@ -190,12 +193,21 @@ class WindowMaps: Fragment() {
 			AlertDialog.Builder(it)
 				.setTitle(getString(R.string.t_location_success))
 				.setMessage(address)
-				.setPositiveButton(getString(R.string.t_open_details)) { _, _ -> setLoad(); setMarker(location)
-				}
-				.setNegativeButton(getString(R.string.t_cancel_locations)) { dialog, _ -> setLoad(); dialog.dismiss()  }
+				.setPositiveButton(getString(R.string.t_open_details)) { _, _ -> goMe(address, location) }
+				.setNegativeButton(getString(R.string.t_cancel_locations)) { dialog, _ -> setLoad(); dialog.dismiss() }
 				.create()
 				.show()
 		}
+	}
+
+	private fun goMe(address: String, location: Location) {
+		val locate = LatLng(
+			location.latitude,
+			location.longitude
+		)
+		setLoad()
+		setMarker(locate, address)
+		map.moveCamera(CameraUpdateFactory.newLatLng(locate))
 	}
 
 	//endregion
@@ -204,9 +216,49 @@ class WindowMaps: Fragment() {
 
 	private fun buttonBinds() {
 		with(binding) {
+			_bottomSheetBehavior = BottomSheetBehavior.from(mapper.popupSheet.bottomSheetContainer)
+			bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+			bottomSheetBehavior.isHideable = true
+			bottomSheetBehavior.addBottomSheetCallback(object:
+				BottomSheetBehavior.BottomSheetCallback() {
+				override fun onStateChanged(bottomSheet: View, newState: Int) {
+					when (newState) {
+						BottomSheetBehavior.STATE_DRAGGING -> {
+						}
+						BottomSheetBehavior.STATE_COLLAPSED -> {
+							bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+						}
+						BottomSheetBehavior.STATE_EXPANDED -> {
+						}
+						BottomSheetBehavior.STATE_HALF_EXPANDED -> {
+						}
+						BottomSheetBehavior.STATE_HIDDEN -> {
+						}
+						BottomSheetBehavior.STATE_SETTLING -> {
+						}
+					}
+				}
+
+				override fun onSlide(bottomSheet: View, slideOffset: Float) {}
+
+			})
+			mapper.popupSheet.bOk.setOnClickListener { hideKeyboard() }
+			mapper.popupSheet.bDel.setOnClickListener { deleteMarker() }
+			mapper.popupSheet.bSave.setOnClickListener { saveMarker() }
 			bSearch.setOnClickListener { findLocation() }
 			bMe.setOnClickListener { setLoad(true); location() }
 		}
+	}
+
+	private fun deleteMarker() {
+		current.remove()
+		bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+	}
+
+	private fun saveMarker() {
+		//Были проблемы с рефрешем поҝтому метка пересоздаетсә
+		setMarker(LatLng(current.position.latitude, current.position.longitude), binding.mapper.popupSheet.name.text.toString())
+		deleteMarker()
 	}
 
 	private fun findLocation() {
@@ -223,17 +275,8 @@ class WindowMaps: Fragment() {
 		}
 	}
 
-	private fun setMarker(location: LatLng, search: String = ""): Marker {
-		lastLat = location.latitude
-		lastLon = location.longitude
-		return map.addMarker(MarkerOptions().position(location).title(search))!!
-	}
-	private fun setMarker(location: Location, search: String = ""): Marker {
-		val locate = LatLng(
-			location.latitude,
-			location.longitude
-		)
-		return setMarker(locate,search)
+	private fun setMarker(location: LatLng, search: String = "") {
+		markers.add(map.addMarker(MarkerOptions().position(location).title(search))!!)
 	}
 
 	//endregion
