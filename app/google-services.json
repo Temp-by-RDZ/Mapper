@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1066337282853",
+    "project_id": "mapper-378817",
+    "storage_bucket": "mapper-378817.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1066337282853:android:caaaca8b92fc9816c388cc",
+        "android_client_info": {
+          "package_name": "com.trdz.mapper"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1066337282853-cmi6nn0vahca7k0nteu42qttcu564i4g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAfa9iwUPfyQqIsdCjl_tG0FmHnEE6l_UU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1066337282853-cmi6nn0vahca7k0nteu42qttcu564i4g.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

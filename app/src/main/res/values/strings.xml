@@ -1,0 +1,27 @@
+<resources>
+    <string name="_0" translatable="false">0</string>
+    <string name="t_location" translatable="false">Location</string>
+    <string name="ND_OPEN" translatable="false">ND_OPEN</string>
+    <string name="ND_CLOSE" translatable="false">ND_CLOSE</string>
+    <string name="app_name">Маппер</string>
+    <string name="t_start_me">Мое местоположение</string>
+    <string name="t_ignore_error">Загрузить прошлые данные?</string>
+    <string name="t_repeat">Повторить</string>
+    <string name="t_error">Ошибка загрузки:</string>
+    <string name="t_loading">Данные по LiveData - Загрузка</string>
+    <string name="b_back">Назад</string>
+    <string name="t_work_line">Текущее местоположение</string>
+    <string name="t_location_success">Местоположение определенно</string>
+    <string name="t_open_details">Открыть погоду</string>
+    <string name="t_cancel_locations">Вернуться</string>
+    <string name="t_change_locations">Изменить</string>
+    <string name="t_permission_title">Требуется подтверждение</string>
+    <string name="t_permission_explain"> Для поиска по геолокации нужен доступ к геолокации</string>
+    <string name="t_permission_yes">Подтвердить</string>
+    <string name="t_permission_no">Запретить</string>
+    <string name="t_address_hint">введите адрес</string>
+    <string name="b_start_search">GO</string>
+    <string name="t_open_weather">открыть погоду</string>
+    <string name="t_title_your_position">Ваша позиция</string>
+    <string name="button_me">Я</string>
+</resources>
